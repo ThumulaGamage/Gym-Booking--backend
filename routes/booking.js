@@ -112,7 +112,7 @@ router.get("/admin/all", [auth, admin], async (req, res) => {
     if (slot) query.slot = slot;
 
     const bookings = await Booking.find(query)
-      .populate('user', 'name email')
+      .populate('user', 'name email registrationNo indexNo batch telNo')
       .sort({ date: 1, slot: 1 });
     
     res.json(bookings);
@@ -136,6 +136,45 @@ router.delete("/admin/:id", [auth, admin], async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ msg: "Server error" });
+  }
+});
+// GET: Gym Settings
+const GymSettings = require("../models/GymSettings");
+
+router.get("/settings", auth, async (req, res) => {
+  try {
+    let settings = await GymSettings.findOne();
+
+    // If no settings exist, create default ones automatically
+    if (!settings) {
+      settings = await GymSettings.create({
+        slots: [
+          {
+            name: "Morning Slot (6AM - 8AM)",
+            startTime: "06:00",
+            endTime: "08:00",
+            capacity: 20,
+            enabled: true
+          },
+          {
+            name: "Evening Slot (5PM - 7PM)",
+            startTime: "17:00",
+            endTime: "19:00",
+            capacity: 20,
+            enabled: true
+          }
+        ],
+        bookingEnabled: true,
+        maxAdvanceBookingDays: 7,
+        closedDates: [],
+      });
+    }
+
+    res.json(settings);
+
+  } catch (error) {
+    console.error("Error loading gym settings:", error);
+    res.status(500).json({ msg: "Server error loading settings" });
   }
 });
 
