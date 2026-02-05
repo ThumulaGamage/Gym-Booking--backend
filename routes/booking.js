@@ -4,7 +4,7 @@ const express = require("express");
 const router = express.Router();
 const Booking = require("../models/booking");
 const auth = require("../middleware/auth");
-const admin = require("../middleware/admin"); // We'll create this
+const admin = require("../middleware/admin");
 
 // Create booking
 router.post("/", auth, async (req, res) => {
@@ -42,6 +42,18 @@ router.post("/", auth, async (req, res) => {
 
     const populatedBooking = await Booking.findById(booking._id).populate('user', 'name email');
     res.json({ msg: "Booking success", booking: populatedBooking });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
+// Get user's bookings - NEW ENDPOINT ADDED
+router.get("/", auth, async (req, res) => {
+  try {
+    const bookings = await Booking.find({ user: req.user.id })
+      .sort({ date: -1 });
+    res.json(bookings);
   } catch (error) {
     console.error(error);
     res.status(500).json({ msg: "Server error" });
@@ -138,6 +150,7 @@ router.delete("/admin/:id", [auth, admin], async (req, res) => {
     res.status(500).json({ msg: "Server error" });
   }
 });
+
 // GET: Gym Settings
 const GymSettings = require("../models/GymSettings");
 
